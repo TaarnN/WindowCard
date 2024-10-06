@@ -1,26 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getWTextData, fetchGoogleSearchResults } from "@/app/utils/search";
+import { fetchGoogleSearchResults } from "@/app/utils/search";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const query = searchParams.get("query");
+  const num = searchParams.get("num");
+  const lang = searchParams.get("lang");
+  const isFastMode = searchParams.get("isFastMode");
+  const specificweb = searchParams.get("specificweb");
 
-  // Validate the query parameter
   if (!query || typeof query !== "string") {
     return NextResponse.json({ error: "Invalid query" }, { status: 400 });
   }
 
-  // Fetch Google search results based on the query
-  const urls = await fetchGoogleSearchResults(query);
+  const isFastModeBool = isFastMode === "true" ? true : false;
 
-  // Fetch additional data for each URL in parallel
-  const results = await Promise.all(
-    urls.map(async (url: string) => {
-      const data = await getWTextData(url);
-      return { ...data, url };
-    })
+  const fetchedResults = await fetchGoogleSearchResults(
+    isFastModeBool,
+    query,
+    num || "",
+    lang || "en",
+    specificweb || "",
   );
 
-  // Return the results as a JSON response
-  return NextResponse.json(results);
+  return NextResponse.json(fetchedResults);
 }
